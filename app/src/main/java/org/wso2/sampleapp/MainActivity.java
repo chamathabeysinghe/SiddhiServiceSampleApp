@@ -28,9 +28,9 @@ public class MainActivity extends AppCompatActivity {
 
     String inStreamDefinition2 = "" +
             "@app:name('foo2')" +
-            "@source(type='proximity',classname='org.wso2.ceptest.MainActivity', @map(type='passThrough'))" +
+            "@source(type='temperature',classname='org.wso2.ceptest.MainActivity', @map(type='passThrough'))" +
             "define stream streamProximity ( sensorName string, timestamp long, accuracy int,distance float);" +
-            "@sink(type='broadcast' , identifier='EVENT_DETAILS' , @map(type='passThrough'))" +
+            "@sink(type='broadcast' , identifier='TEMPERATURE_DETAILS' , @map(type='passThrough'))" +
             "define stream broadcastOutputStream (distance float); " +
             "from streamProximity [distance > 4] select distance insert into broadcastOutputStream";
 
@@ -50,8 +50,8 @@ public class MainActivity extends AppCompatActivity {
 
         @Override
         public void onReceive(Context context, Intent intent) {
-            if(intent.getAction().equals("EVENT_DETAILS")){
-                Log.e("FOUND",intent.getStringExtra("events"));
+            if(intent.getAction().equals("TEMPERATURE_DETAILS")){
+                Log.e("TEMPERATURE_DETAILS",intent.getStringExtra("events"));
             }
         }
     }
@@ -80,7 +80,7 @@ public class MainActivity extends AppCompatActivity {
     protected void onResume() {
         super.onResume();
         if (dataUpdateReceiver == null) dataUpdateReceiver = new DataUpdateReceiver();
-        IntentFilter intentFilter = new IntentFilter("EVENT_DETAILS");
+        IntentFilter intentFilter = new IntentFilter("TEMPERATURE_DETAILS");
         registerReceiver(dataUpdateReceiver, intentFilter);
     }
 
