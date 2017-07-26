@@ -31,20 +31,22 @@ public class MainActivity extends AppCompatActivity {
             "@source(type='temperature',classname='org.wso2.ceptest.MainActivity', @map(type='passThrough'))" +
             "define stream streamProximity ( sensorName string, timestamp long, accuracy int,distance float);" +
             "@sink(type='broadcast' , identifier='TEMPERATURE_DETAILS' , @map(type='passThrough'))" +
-            "define stream broadcastOutputStream (distance float); " +
-            "from streamProximity [distance > 4] select distance insert into broadcastOutputStream";
+            "define stream broadcastOutputStream (distance double); " +
+            "from streamProximity#window.timeBatch(5 sec) select sum(distance) as distance insert into broadcastOutputStream";
+
+    String inStreamDefinition4 = "" +
+            "@app:name('foo2')" +
+            "@source(type='temperature',classname='org.wso2.ceptest.MainActivity', @map(type='passThrough'))" +
+            "define stream streamProximity ( sensorName string, timestamp long, accuracy int,distance float);" +
+            "@sink(type='broadcast' , identifier='TEMPERATURE_DETAILS' , @map(type='passThrough'))" +
+            "from streamProximity#window.timeBatch(5 sec) select sum(distance) as distance insert into broadcastOutputStream";
 
     String inStreamDefinition3 = "" +
             "@app:name('foo3')" +
             "@source(type='proximity',classname='org.wso2.ceptest.MainActivity', @map(type='passThrough'))" +
             "define stream streamProximity ( sensorName string, timestamp long, accuracy int,distance float);" +
-            "@sink(type='broadcast' , identifier='EVENT_DETAILS' , @map(type='passThrough'))" +
-            "define stream broadcastOutputStream (distance float); " +
-            "from streamProximity#window.timeBatch(5 sec) select sum(distance) as distance insert into broadcastOutputStream";
-
-
-
-
+            "@sink(type='broadcast' , identifier='TEMPERATURE_DETAILS' , @map(type='passThrough'))" +
+            "from streamProximity#window.timeBatch(5 sec) select sum(distance) as distance insert into broadcastOutputStream2";
 
     private class DataUpdateReceiver extends BroadcastReceiver {
 
