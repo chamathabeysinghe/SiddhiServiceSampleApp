@@ -6,5 +6,5 @@ package org.wso2.siddhiservice;
 interface IRequestController {
 
     String startSiddhiApp(String definition,String identifier);
-
+    String stopSiddhiApp(String identifier);
 }

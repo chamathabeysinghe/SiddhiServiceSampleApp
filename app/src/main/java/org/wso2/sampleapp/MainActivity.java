@@ -14,50 +14,34 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
+import android.widget.ArrayAdapter;
+import android.widget.ListView;
+import android.widget.Toast;
+
 import org.wso2.siddhiservice.IRequestController;
+
+import java.util.ArrayList;
 import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
+
+    private final String APP_IDENTIFIER="org.wso2.sampleapp";
+    private final String SIDDHI_SERVICE_IDENTIFIER="org.wso2.siddhiappservice.AIDL";
+
     private DataUpdateReceiver dataUpdateReceiver;
 
-    String inStreamDefinition = "" +
-            "@app:name('foo1')" +
-            "@source(type='proximity',classname='org.wso2.ceptest.MainActivity', @map(type='passThrough'))" +
-            "@sink(type='broadcast' , identifier='EVENT_DETAILS' , @map(type='passThrough'))" +
-            "define stream streamProximity ( sensorName string, timestamp long, accuracy int,distance float);";
-
-    String inStreamDefinition2 = "" +
+    private String inStreamDefinition = "" +
             "@app:name('foo2')" +
-            "@source(type='temperature',classname='org.wso2.ceptest.MainActivity', @map(type='passThrough'))" +
-            "define stream streamProximity ( sensorName string, timestamp long, accuracy int,distance float);" +
+            "@source(type='temperature', @map(type='passThrough'))" +
+            "define stream streamTemperature ( sensorName string, timestamp long, accuracy int,temp float);" +
             "@sink(type='broadcast' , identifier='TEMPERATURE_DETAILS' , @map(type='passThrough'))" +
-            "define stream broadcastOutputStream (distance double); " +
-            "from streamProximity#window.timeBatch(5 sec) select sum(distance) as distance insert into broadcastOutputStream";
+            "define stream broadcastOutputStream (temp float); " +
+            "from streamTemperature [temp > 6] select temp insert into broadcastOutputStream";
 
-    String inStreamDefinition4 = "" +
-            "@app:name('foo2')" +
-            "@source(type='temperature',classname='org.wso2.ceptest.MainActivity', @map(type='passThrough'))" +
-            "define stream streamProximity ( sensorName string, timestamp long, accuracy int,distance float);" +
-            "@sink(type='broadcast' , identifier='TEMPERATURE_DETAILS' , @map(type='passThrough'))" +
-            "from streamProximity#window.timeBatch(5 sec) select sum(distance) as distance insert into broadcastOutputStream";
 
-    String inStreamDefinition3 = "" +
-            "@app:name('foo3')" +
-            "@source(type='proximity',classname='org.wso2.ceptest.MainActivity', @map(type='passThrough'))" +
-            "define stream streamProximity ( sensorName string, timestamp long, accuracy int,distance float);" +
-            "@sink(type='broadcast' , identifier='TEMPERATURE_DETAILS' , @map(type='passThrough'))" +
-            "from streamProximity#window.timeBatch(5 sec) select sum(distance) as distance insert into broadcastOutputStream2";
-
-    private class DataUpdateReceiver extends BroadcastReceiver {
-
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            if(intent.getAction().equals("TEMPERATURE_DETAILS")){
-                Log.e("TEMPERATURE_DETAILS",intent.getStringExtra("events"));
-            }
-        }
-    }
-
+    private ListView listView;
+    private ArrayList<String> messageList=new ArrayList<>();
+    private ArrayAdapter<String> listAdapter;
 
     private IRequestController comman ;
     private ServiceConnection serviceCon=new ServiceConnection() {
@@ -76,6 +60,10 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        listView= (ListView) findViewById(R.id.messageList);
+
+        listAdapter=new ArrayAdapter(this,android.R.layout.simple_list_item_1,messageList);
+        listView.setAdapter(listAdapter);
     }
 
     @Override
@@ -86,22 +74,40 @@ public class MainActivity extends AppCompatActivity {
         registerReceiver(dataUpdateReceiver, intentFilter);
     }
 
+    /**
+     *
+     * Bind the Android app to Sidddhi Service
+     * @param view
+     */
     public void bindToSiddhiService(View view){
-        Log.e("Clicked","Clicked the button ");
-        Intent intent=new Intent("org.wso2.siddhiappservice.AIDL");
+        Toast.makeText(this, "Binding to the service", Toast.LENGTH_SHORT).show();
+        Intent intent=new Intent(SIDDHI_SERVICE_IDENTIFIER);
         bindService(convertIntent(intent),serviceCon,BIND_AUTO_CREATE);
 
     }
 
+    /**
+     * Send the app stream to SiddhiService
+     * @param view
+     */
     public void sendAQuery(View view){
         try {
-            comman.startSiddhiApp(inStreamDefinition2,"org.wso2.sampleapp");
+            comman.startSiddhiApp(inStreamDefinition,APP_IDENTIFIER);
+            Toast.makeText(this,"Send the query : "+inStreamDefinition,Toast.LENGTH_LONG).show();
+        } catch (RemoteException e) {
+            e.printStackTrace();
+        }
+    }
+    public void stopAQuery(View view){
+        try {
+            comman.stopSiddhiApp(APP_IDENTIFIER);
+            Toast.makeText(this,"Stop the query",Toast.LENGTH_SHORT).show();
         } catch (RemoteException e) {
             e.printStackTrace();
         }
     }
 
-    public Intent convertIntent(Intent implicitIntent){
+    private Intent convertIntent(Intent implicitIntent){
         PackageManager pm=getPackageManager();
         List<ResolveInfo> resolveInfoList=pm.queryIntentServices(implicitIntent,0);
         if(resolveInfoList.size()!=1){
@@ -116,6 +122,21 @@ public class MainActivity extends AppCompatActivity {
         Intent explicitIntent=new Intent(implicitIntent);
         explicitIntent.setComponent(component);
         return explicitIntent;
+    }
+
+    /**
+     * Broadcast receiver to get intents from the Siddhi Service
+     * Has a hardcoded intent filter to match the query
+     */
+    private class DataUpdateReceiver extends BroadcastReceiver {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            if(intent.getAction().equals("TEMPERATURE_DETAILS")){
+                messageList.add("TEMPERATURE_DETAILS: "+intent.getStringExtra("events"));
+                listAdapter.notifyDataSetChanged();
+                Log.i("TEMPERATURE_DETAILS",intent.getStringExtra("events"));
+            }
+        }
     }
 
 }

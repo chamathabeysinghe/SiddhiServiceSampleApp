@@ -13,12 +13,28 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:onClick="bindToSiddhiService"
-        android:text="Button" />
+        android:text="Bind Service" />
 
     <Button
         android:id="@+id/button2"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:onClick="sendAQuery"
-        android:text="Button" />
+        android:text="Send Query" />
+
+    <Button
+        android:id="@+id/button3"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:onClick="stopAQuery"
+        android:text="Stop Query" />
+
+    <ListView
+        android:id="@+id/messageList"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:transcriptMode="alwaysScroll"
+        android:stackFromBottom="false"
+        android:layout_marginTop="10px"/>
+
 </LinearLayout>
