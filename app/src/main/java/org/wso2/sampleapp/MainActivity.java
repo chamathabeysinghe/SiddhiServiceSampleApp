@@ -83,7 +83,6 @@ public class MainActivity extends AppCompatActivity {
         Toast.makeText(this, "Binding to the service", Toast.LENGTH_SHORT).show();
         Intent intent=new Intent(SIDDHI_SERVICE_IDENTIFIER);
         bindService(convertIntent(intent),serviceCon,BIND_AUTO_CREATE);
-
     }
 
     /**
@@ -98,6 +97,11 @@ public class MainActivity extends AppCompatActivity {
             e.printStackTrace();
         }
     }
+
+    /**
+     * stop a running siddhi app
+     * @param view
+     */
     public void stopAQuery(View view){
         try {
             comman.stopSiddhiApp(APP_IDENTIFIER);
